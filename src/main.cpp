@@ -6,10 +6,34 @@
 
 struct Tag 
 {
-    bool multiline = true;
-    std::string open = "<p>\n";
-    std::string close = "</p>\n";
+    bool multiline;
+    std::string open;
+    std::string close;
 };
+
+struct SpecialReturn
+{
+    int content_start;
+    Tag tag;
+};
+
+SpecialReturn getTag(const std::unordered_map<std::string, Tag>& map, std::string& key)
+{
+    SpecialReturn ret;
+
+    if (map.find(key) != map.end())
+        ret = {
+            static_cast<int>(key.length()), 
+            map.at(key)
+        };
+    else
+        ret = {
+            0, 
+            {true, "<p>\n", "</p>\n"}
+        }; 
+    
+    return ret;
+}
 
 std::string createIndentedString(std::string& content, int indentation)
 {
@@ -39,7 +63,8 @@ int main(int argc, char* argv[])
 
     std::unordered_map<std::string, Tag> map = 
     {
-        {"#", {false, "<h1>", "</h1>\n"}}
+        {"#", {false, "<h1>", "</h1>\n"}},
+        {"!", {false, "<img src=\"", "\" alt=\"Could not find image.\">"}}
     };
 
     std::string html = "";
@@ -55,8 +80,9 @@ int main(int argc, char* argv[])
             continue;
 
         std::string key = buffer.substr(0, 1);
-
-        Tag& tag = map[key];
+        
+        SpecialReturn sr = getTag(map, key); 
+        Tag& tag = sr.tag;
 
         if (tag.open != previous)
         {
@@ -79,7 +105,7 @@ int main(int argc, char* argv[])
                 indentation++;
         }
 
-        std::string content = buffer.substr(1, buffer.length() - 1);
+        std::string content = buffer.substr(sr.content_start, buffer.length() - sr.content_start);
         
         if (tag.multiline)
             html += createIndentedString(content, indentation) + "\n";
