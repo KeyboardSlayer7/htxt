@@ -11,15 +11,15 @@ struct Tag
     std::string close;
 };
 
-struct SpecialReturn
+struct TagContentInfo 
 {
     int content_start;
     Tag tag;
 };
 
-SpecialReturn getTag(const std::unordered_map<std::string, Tag>& map, std::string& key)
+TagContentInfo getTag(const std::unordered_map<std::string, Tag>& map, std::string& key)
 {
-    SpecialReturn ret;
+    TagContentInfo ret;
 
     if (map.find(key) != map.end())
         ret = {
@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
     std::unordered_map<std::string, Tag> map = 
     {
         {"#", {false, "<h1>", "</h1>\n"}},
+        {"##", {false, "<h2>", "</h2>\n"}},
+        {"###", {false, "<h3>", "</h3>\n"}},
+        {"####", {false, "<h4>", "</h4>\n"}},
         {"!", {false, "<img src=\"", "\" alt=\"Could not find image.\">"}}
     };
 
@@ -78,11 +81,20 @@ int main(int argc, char* argv[])
     {
         if (buffer.length() == 0)
             continue;
-
-        std::string key = buffer.substr(0, 1);
         
-        SpecialReturn sr = getTag(map, key); 
-        Tag& tag = sr.tag;
+        int key_length = 1;
+        if (buffer[0] == '#')
+        {
+            while (buffer[key_length] == '#')
+            {
+                key_length++;
+            }
+        }
+
+        std::string key = buffer.substr(0, key_length);
+        
+        TagContentInfo tci = getTag(map, key); 
+        Tag& tag = tci.tag;
 
         if (tag.open != previous)
         {
@@ -105,7 +117,7 @@ int main(int argc, char* argv[])
                 indentation++;
         }
 
-        std::string content = buffer.substr(sr.content_start, buffer.length() - sr.content_start);
+        std::string content = buffer.substr(tci.content_start, buffer.length() - tci.content_start);
         
         if (tag.multiline)
             html += createIndentedString(content, indentation) + "\n";
