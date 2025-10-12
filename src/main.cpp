@@ -155,5 +155,14 @@ int main(int argc, char* argv[])
 
     file.close();
 
+    std::string new_file_name = std::string(argv[1]);
+    new_file_name = new_file_name.substr(0, new_file_name.length() - 3) + "html";
+
+    std::ofstream output(new_file_name);
+
+    output << html;
+
+    output.close();
+
     return 0;
 }
