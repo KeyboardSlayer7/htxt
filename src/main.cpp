@@ -67,14 +67,23 @@ int main(int argc, char* argv[])
         {"##", {false, "<h2>", "</h2>\n"}},
         {"###", {false, "<h3>", "</h3>\n"}},
         {"####", {false, "<h4>", "</h4>\n"}},
-        {"!", {false, "<img src=\"", "\" alt=\"Could not find image.\">"}}
+        {"!", {false, "<img src=\"", "\" alt=\"Could not find image.\">\n"}}
     };
 
-    std::string html = "";
+    std::string html = 
+        "<!DOCTYPE html>\n"
+        "<html lang=\"en\">\n"
+        "<head>\n"
+        "\t<meta charset=\"UTF-8\">\n"
+        "\t<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+        "\t<title>Untitled Page</title>\n"
+        "\t<link rel=\"stylesheet\" href=\"styles.css\">\n"
+        "</head>\n"
+        "<body>\n";
     
-    int indentation = 0;
+    int indentation = 1;
     std::string previous = "none";
-    std::stack<std::string> stk;
+    std::stack<Tag> stk;
     std::string buffer;
 
     while (std::getline(file, buffer))
@@ -98,19 +107,22 @@ int main(int argc, char* argv[])
 
         if (tag.open != previous)
         {
-            if (indentation > 0)
+            if (indentation > 1)
                 indentation--;
             
             if (!stk.empty())
             {
-                std::string ctag = stk.top();
-                html += createIndentedString(ctag, indentation);
+                Tag ctag = stk.top();
+                if (ctag.multiline)
+                    html += createIndentedString(ctag.close, indentation);
+                else
+                    html += ctag.close;
                 stk.pop();
             }
 
             html += createIndentedString(tag.open, indentation);
             
-            stk.push(tag.close);
+            stk.push(tag);
             previous = tag.open;
 
             if (tag.multiline)
@@ -130,10 +142,14 @@ int main(int argc, char* argv[])
         // NOTE: THIS MAY CAUSE ISSUES IN THE FUTURE, BEWARE!!!!!!!
         indentation--;
 
-        std::string ctag = stk.top();
-        html += createIndentedString(ctag, indentation);
+        Tag ctag = stk.top();
+        html += createIndentedString(ctag.close, indentation);
         stk.pop();
     }
+    
+    html += 
+        "</body>\n"
+        "</html>\n";
 
     std::cout << html << "\n";
 
