@@ -173,9 +173,18 @@ int main(int argc, char* argv[])
     std::cout << html << "\n";
 
     file.close();
+    
+    std::string new_file_name;
 
-    std::string new_file_name = std::string(argv[1]);
-    new_file_name = new_file_name.substr(0, new_file_name.length() - 3) + "html";
+    if (argc >= 3)
+    {
+        new_file_name = std::string(argv[2]);
+    }
+    else
+    {
+        std::string temp = std::string(argv[1]);
+        new_file_name = temp.substr(0, temp.length() - 3) + "html";
+    }
 
     std::ofstream output(new_file_name);
 
