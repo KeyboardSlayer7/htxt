@@ -89,7 +89,26 @@ int main(int argc, char* argv[])
     while (std::getline(file, buffer))
     {
         if (buffer.length() == 0)
+        {
+            if (!stk.empty())
+            {
+                if (indentation > 1)
+                    indentation--;
+
+                Tag t = stk.top();
+
+                if (t.multiline)
+                    html += createIndentedString(t.close, indentation);
+                else
+                    html += t.close;
+
+                stk.pop();
+
+                previous = "none";
+            }
             continue;
+        }
+
         
         int key_length = 1;
         if (buffer[0] == '#')
