@@ -67,6 +67,8 @@ int main(int argc, char* argv[])
         {"##", {false, "<h2>", "</h2>\n"}},
         {"###", {false, "<h3>", "</h3>\n"}},
         {"####", {false, "<h4>", "</h4>\n"}},
+        {"#####", {false, "<h5>", "</h5>\n"}},
+        {"######", {false, "<h6>", "</h6>\n"}},
         {"!", {false, "<img src=\"", "\" alt=\"Could not find image.\">\n"}}
     };
 
@@ -84,6 +86,7 @@ int main(int argc, char* argv[])
     int indentation = 1;
     std::string previous = "none";
     std::stack<Tag> stk;
+
     std::string buffer;
 
     while (std::getline(file, buffer))
@@ -92,25 +95,28 @@ int main(int argc, char* argv[])
         {
             if (!stk.empty())
             {
-                if (indentation > 1)
-                    indentation--;
-
-                Tag t = stk.top();
+                Tag& t = stk.top();
 
                 if (t.multiline)
+                {
+                    indentation--;
                     html += createIndentedString(t.close, indentation);
+                }
                 else
+                {
                     html += t.close;
+                }
 
                 stk.pop();
 
                 previous = "none";
             }
+
             continue;
         }
 
-        
         int key_length = 1;
+        
         if (buffer[0] == '#')
         {
             while (buffer[key_length] == '#')
@@ -120,22 +126,26 @@ int main(int argc, char* argv[])
         }
 
         std::string key = buffer.substr(0, key_length);
-        
+
         TagContentInfo tci = getTag(map, key); 
         Tag& tag = tci.tag;
 
         if (tag.open != previous)
-        {
-            if (indentation > 1)
-                indentation--;
-            
+        {            
             if (!stk.empty())
             {
-                Tag ctag = stk.top();
-                if (ctag.multiline)
-                    html += createIndentedString(ctag.close, indentation);
+                Tag& tag = stk.top();
+
+                if (tag.multiline)
+                {
+                    indentation--;
+                    html += createIndentedString(tag.close, indentation);
+                }
                 else
-                    html += ctag.close;
+                {
+                    html += tag.close;
+                }
+
                 stk.pop();
             }
 
@@ -161,8 +171,10 @@ int main(int argc, char* argv[])
         // NOTE: THIS MAY CAUSE ISSUES IN THE FUTURE, BEWARE!!!!!!!
         indentation--;
 
-        Tag ctag = stk.top();
+        Tag& ctag = stk.top();
+
         html += createIndentedString(ctag.close, indentation);
+
         stk.pop();
     }
     
