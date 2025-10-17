@@ -161,9 +161,33 @@ int main(int argc, char* argv[])
         std::string content = buffer.substr(tci.content_start, buffer.length() - tci.content_start);
         
         if (tag.multiline)
-            html += createIndentedString(content, indentation) + "\n";
+        {
+            int start = 0;
+
+            for (int i = 0; i < (content.length() / 64) + 1; ++i)
+            {
+                int index = content.find(' ', start + 64);
+
+                if (index != std::string::npos)
+                {
+                    std::string current = content.substr(start, index - start); 
+                    html += createIndentedString(current, indentation) + "\n";
+                    
+                    start = index + 1;
+                }
+                else
+                {
+                    std::string current = content.substr(start, content.length() - start);
+                    html += createIndentedString(current, indentation) + "\n";
+
+                    break;
+                }
+            }
+        }
         else
+        {
             html += content;
+        }
     }
 
     if (!stk.empty())
